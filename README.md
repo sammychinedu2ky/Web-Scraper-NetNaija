@@ -1,2 +1,2 @@
 # WebScraper(NetNaija)
-A discord bot that notifies you of new movies on netnaija
+A cron job that sends me updates of new movies on netnaija
