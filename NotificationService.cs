@@ -40,8 +40,8 @@ class NotificationService : IHostedService
                 {
                     var link = node.GetAttributes("href").First().Value;
                     var title = node.GetAttributes("href").First().OwnerNode.InnerHtml;
-                    var findMovie = await _collection.Find(Builders<Movie>.Filter.Eq(movie => movie.Link, link)).ToListAsync();
-                    if (findMovie.Count == 0)
+                    var findMovie = await _collection.Find(Builders<Movie>.Filter.Eq(movie => movie.Link, link)).FirstOrDefaultAsync();
+                    if (findMovie is null)
                     {
                         var movie = new Movie(new ObjectId(), title, link, DateTime.Now);
                         newMovies.Add(movie);
@@ -57,7 +57,7 @@ class NotificationService : IHostedService
                     {
                         var payload = new
                         {
-                            content = $"Title: {movie.Title}\nLink: {movie.Link}\nNo: {counter++}"
+                            content = $"Title: **{movie.Title}**\nLink: **{movie.Link}**\nNo: **{counter++}**"
                         };
                         var stringifiedContent = JsonSerializer.Serialize(payload);
                         var content = new StringContent(stringifiedContent, Encoding.UTF8, "application/json");
