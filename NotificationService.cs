@@ -19,15 +19,16 @@ class NotificationService : IHostedService
         _httpClient = httpClient;
         _collection = mongoClient.GetDatabase("scraper").GetCollection<Movie>("movies");
         _timer = new PeriodicTimer(TimeSpan.FromHours(Convert.ToDouble(env[Interval.ScrapingInterval.ToString()])));
-       
+
     }
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        var html = @"https://www.thenetnaija.net/videos/movies";
+
+        HtmlWeb web = new HtmlWeb();
+        
         while (await _timer.WaitForNextTickAsync(cancellationToken))
         {
-            var html = @"https://www.thenetnaija.net/videos/movies";
-
-            HtmlWeb web = new HtmlWeb();
 
             HtmlDocument htmlDoc = web.Load(html);
 
