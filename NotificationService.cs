@@ -8,18 +8,17 @@ class NotificationService : IHostedService
 {
     private readonly ILogger<NotificationService> _logger;
     private readonly IConfiguration _env;
-    private readonly HttpClient _httpClient;
     private readonly PeriodicTimer _timer;
     private readonly IMongoCollection<Movie> _collection;
+    private readonly SendMessages _sendClient;
 
-    public NotificationService(IConfiguration env, ILogger<NotificationService> logger, IMongoClient mongoClient, HttpClient httpClient)
+    public NotificationService(IConfiguration env, ILogger<NotificationService> logger, IMongoClient mongoClient,SendMessages sendClient)
     {
         _logger = logger;
         _env = env;
-        _httpClient = httpClient;
         _collection = mongoClient.GetDatabase("scraper").GetCollection<Movie>("movies");
         _timer = new PeriodicTimer(TimeSpan.FromHours(Convert.ToDouble(env[Interval.ScrapingInterval.ToString()])));
-
+        _sendClient = sendClient;
     }
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -60,11 +59,9 @@ class NotificationService : IHostedService
                         {
                             content = $"Title: **{movie.Title}**\nLink: **{movie.Link}**\nNo: **{counter++}**"
                         };
-                        var stringifiedContent = JsonSerializer.Serialize(payload);
-                        var content = new StringContent(stringifiedContent, Encoding.UTF8, "application/json");
-                        var p = _httpClient.PostAsync(_env["webhook"], content).Result;
-                        _logger.LogInformation("sent");
-                        Task.Delay(1000).Wait();
+                        
+                        _sendClient.Send(payload);
+                       
                     }));
 
 
@@ -72,9 +69,17 @@ class NotificationService : IHostedService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.GetType().ToString());
-                _logger.LogError(ex.Message);
-                _logger.LogError(ex.StackTrace);
+                var errorType = ex.GetType().ToString();
+                var errorMessage = ex.Message;
+                var errorStackTrace = ex.StackTrace;
+                _logger.LogError(errorType);
+                _logger.LogError(errorMessage);
+                _logger.LogError(errorStackTrace);
+                var payload = new
+                {
+                    content = $"ErrorType: **{errorType}**\nErrorMessage: **{errorMessage}**\nErrorStackTrace: **{errorStackTrace}**"
+                };
+                _sendClient.Send(payload).Wait();
             }
 
 
@@ -84,6 +89,28 @@ class NotificationService : IHostedService
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("shutting down......");
+        return Task.CompletedTask;
+    }
+}
+
+class SendMessages
+{
+    public IConfiguration _env { get; set; } = default!;
+    public ILogger<NotificationService> _logger { get; set; } = default!;
+    public HttpClient _httpClient;
+    public SendMessages(ILogger<NotificationService> logger, IConfiguration env, HttpClient httpClient)
+    {
+        _logger = logger;
+        _env = env;
+        _httpClient = httpClient;
+    }
+    public Task Send(dynamic payload)
+    {
+        var stringifiedContent = JsonSerializer.Serialize(payload);
+        var content = new StringContent(stringifiedContent, Encoding.UTF8, "application/json");
+        var send = _httpClient.PostAsync(_env["webhook"], content).Result;
+        _logger.LogInformation($"Status Code: {send.StatusCode}");
+        Task.Delay(1000).Wait();
         return Task.CompletedTask;
     }
 }

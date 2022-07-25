@@ -6,6 +6,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHostedService<NotificationService>();
 builder.Services.AddSingleton<HttpClient>();
 builder.Services.AddHostedService<CleanupService>();
+builder.Services.AddSingleton(s =>
+{
+    var logger = s.GetService<ILogger<NotificationService>>()!;
+    var env = s.GetService<IConfiguration>()!;
+    var httpClient = s.GetService<HttpClient>()!;
+    return new SendMessages(logger, env, httpClient);
+});
 
 builder.Services.AddSingleton<IMongoClient>(s =>
 {
