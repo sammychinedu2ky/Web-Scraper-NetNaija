@@ -22,7 +22,7 @@ public class CleanupService : IHostedService
             try
             {
                 
-                var deletedMovies = await _collection.DeleteManyAsync(Builders<Movie>.Filter.Lt(movie => movie.Time, DateTime.Now));
+                var deletedMovies = await _collection.DeleteManyAsync(Builders<Movie>.Filter.Lt(movie => movie.Time, DateTime.Now.Subtract(TimeSpan.FromDays(7))));
                 _logger.LogInformation($"Number of movies deleted: ${deletedMovies.DeletedCount}");
             }
             catch (Exception ex)
