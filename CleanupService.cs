@@ -2,7 +2,7 @@
 using MongoDB.Driver;
 
 public class CleanupService : IHostedService
-    {
+{
     private readonly ILogger<CleanupService> _logger;
     private readonly IConfiguration _env;
     private readonly PeriodicTimer _timer;
@@ -16,13 +16,15 @@ public class CleanupService : IHostedService
 
     }
     public async Task StartAsync(CancellationToken cancellationToken)
-        {
+    {
         while (await _timer.WaitForNextTickAsync())
         {
             try
             {
-                
-                var deletedMovies = await _collection.DeleteManyAsync(Builders<Movie>.Filter.Lt(movie => movie.Time, DateTime.Now.Subtract(TimeSpan.FromDays(7))));
+
+                var deletedMovies = await _collection.DeleteManyAsync(Builders<Movie>.Filter
+                .Lt(movie => movie.Time, DateTime
+                .Now.Subtract(TimeSpan.FromDays(7))));
                 _logger.LogInformation($"Number of movies deleted: ${deletedMovies.DeletedCount}");
             }
             catch (Exception ex)
@@ -31,14 +33,14 @@ public class CleanupService : IHostedService
                 _logger.LogError(ex.Message);
                 _logger.LogError(ex.StackTrace);
             }
-           
-        }
-        }
 
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
+        }
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
         _logger.LogInformation("shutting down......");
         return Task.CompletedTask;
     }
-    }
+}
 
