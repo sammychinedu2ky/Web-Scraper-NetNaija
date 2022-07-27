@@ -57,7 +57,7 @@ class NotificationService : IHostedService
                     {
                         var payload = new
                         {
-                            content = $"No: **{counter++}**\nTitle: **{movie.Title}**\nLink: **{movie.Link}**"
+                            content = $"No: **{counter++}**\nTitle: **{movie.Title}**\nLink: {movie.Link}"
                         };
                         
                         _sendClient.Send(payload);
