@@ -75,6 +75,7 @@ class NotificationService : IHostedService
                 _logger.LogError(errorType);
                 _logger.LogError(errorMessage);
                 _logger.LogError(errorStackTrace);
+                _logger.LogError(ex.ToString());
                 var payload = new
                 {
                     content = $"ErrorType: **{errorType}**\nErrorMessage: **{errorMessage}**\nErrorStackTrace: **{errorStackTrace}**"
