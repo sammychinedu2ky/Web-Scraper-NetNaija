@@ -12,7 +12,7 @@ class NotificationService : IHostedService
     private readonly IMongoCollection<Movie> _collection;
     private readonly SendMessages _sendClient;
 
-    public NotificationService(IConfiguration env, ILogger<NotificationService> logger, IMongoClient mongoClient,SendMessages sendClient)
+    public NotificationService(IConfiguration env, ILogger<NotificationService> logger, IMongoClient mongoClient, SendMessages sendClient)
     {
         _logger = logger;
         _env = env;
@@ -25,17 +25,17 @@ class NotificationService : IHostedService
         var html = @"https://www.thenetnaija.net/videos/movies";
 
         HtmlWeb web = new HtmlWeb();
-        
-        while (await _timer.WaitForNextTickAsync(cancellationToken))
+
+        try
         {
-
-            HtmlDocument htmlDoc = web.Load(html);
-
-            var elements = htmlDoc.DocumentNode.SelectNodes("//div/h2/a");
-
-            var newMovies = new List<Movie>();
-            try
+            while (await _timer.WaitForNextTickAsync(cancellationToken))
             {
+
+                HtmlDocument htmlDoc = web.Load(html);
+
+                var elements = htmlDoc.DocumentNode.SelectNodes("//div/h2/a");
+
+                var newMovies = new List<Movie>();
                 foreach (var node in elements)
                 {
                     var link = node.GetAttributes("href").First().Value;
@@ -59,32 +59,32 @@ class NotificationService : IHostedService
                         {
                             content = $"No: **{counter++}**\nTitle: **{movie.Title}**\nLink: {movie.Link}"
                         };
-                        
+
                         _sendClient.Send(payload);
-                       
+
                     }));
 
 
                 }
-            }
-            catch (Exception ex)
-            {
-                var errorType = ex.GetType().ToString();
-                var errorMessage = ex.Message;
-                var errorStackTrace = ex.StackTrace;
-                _logger.LogError(errorType);
-                _logger.LogError(errorMessage);
-                _logger.LogError(errorStackTrace);
-                _logger.LogError(ex.ToString());
-                var payload = new
-                {
-                    content = $"ErrorType: **{errorType}**\nErrorMessage: **{errorMessage}**\nErrorStackTrace: **{errorStackTrace}**"
-                };
-                _sendClient.Send(payload).Wait();
-            }
 
-
+            }
         }
+        catch (Exception ex)
+        {
+            var errorType = ex.GetType().ToString();
+            var errorMessage = ex.Message;
+            var errorStackTrace = ex.StackTrace;
+            _logger.LogError(errorType);
+            _logger.LogError(errorMessage);
+            _logger.LogError(errorStackTrace);
+            _logger.LogError(ex.ToString());
+            var payload = new
+            {
+                content = $"ErrorType: **{errorType}**\nErrorMessage: **{errorMessage}**\nErrorStackTrace: **{errorStackTrace}**"
+            };
+            _sendClient.Send(payload).Wait();
+        }
+
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
