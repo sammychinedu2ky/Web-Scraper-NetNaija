@@ -71,18 +71,30 @@ class NotificationService : IHostedService
         }
         catch (Exception ex)
         {
-            var errorType = ex.GetType().ToString();
-            var errorMessage = ex.Message;
-            var errorStackTrace = ex.StackTrace;
-            _logger.LogError(errorType);
-            _logger.LogError(errorMessage);
-            _logger.LogError(errorStackTrace);
-            _logger.LogError(ex.ToString());
-            var payload = new
+            dynamic payload;
+            if (ex is OperationCanceledException)
             {
-                content = $"ErrorType: **{errorType}**\nErrorMessage: **{errorMessage}**\nErrorStackTrace: **{errorStackTrace}**"
-            };
-            _sendClient.Send(payload).Wait();
+                payload = new
+                {
+                    content = $"ErrorType: **ShuttingDown**\nErrorMessage: **ShuttingDown**\nErrorStackTrace: **ShuttingDown**"
+                };
+                _sendClient.Send(payload).Wait();
+            }
+            else
+            {
+                var errorType = ex.GetType().ToString();
+                var errorMessage = ex.Message;
+                var errorStackTrace = ex.StackTrace;
+                _logger.LogError(errorType);
+                _logger.LogError(errorMessage);
+                _logger.LogError(errorStackTrace);
+                payload = new
+                {
+                    content = $"ErrorType: **{errorType}**\nErrorMessage: **{errorMessage}**\nErrorStackTrace: **{errorStackTrace}**"
+                };
+                _sendClient.Send(payload).Wait();
+
+            }
         }
 
     }
