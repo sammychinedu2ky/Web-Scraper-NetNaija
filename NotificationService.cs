@@ -33,17 +33,18 @@ class NotificationService : IHostedService
 
                 HtmlDocument htmlDoc = web.Load(html);
 
-                var elements = htmlDoc.DocumentNode.SelectNodes("//div/h2/a");
+                var elements = htmlDoc.DocumentNode.SelectNodes("//article");
 
                 var newMovies = new List<Movie>();
                 foreach (var node in elements)
                 {
-                    var link = node.GetAttributes("href").First().Value;
-                    var title = node.GetAttributes("href").First().OwnerNode.InnerHtml;
+                    var link = node.SelectSingleNode("//h2/a").GetAttributes("href").First().Value; ;
+                    var title = node.SelectSingleNode("//h2/a").GetAttributes("href").First().OwnerNode.InnerHtml;
+                    var image = node.SelectSingleNode("//div/img").Attributes["src"].Value;
                     var findMovie = await _collection.Find(Builders<Movie>.Filter.Eq(movie => movie.Link, link)).FirstOrDefaultAsync();
                     if (findMovie is null)
                     {
-                        var movie = new Movie(new ObjectId(), title, link, DateTime.Now);
+                        var movie = new Movie(new ObjectId(), title, link, image, DateTime.Now);
                         newMovies.Add(movie);
                     }
 
@@ -57,16 +58,13 @@ class NotificationService : IHostedService
                     {
                         var payload = new
                         {
-                            content = $"No: **{counter++}**\nTitle: **{movie.Title}**\nLink: {movie.Link}"
+                            content = $"No: **{counter++}**\nTitle: **{movie.Title}**\nLink: {movie.Link}\nImage: {movie.Image}"
                         };
 
                         _sendClient.Send(payload);
 
                     }));
-
-
                 }
-
             }
         }
         catch (Exception ex)
