@@ -38,9 +38,9 @@ class NotificationService : IHostedService
                 var newMovies = new List<Movie>();
                 foreach (var node in elements)
                 {
-                    var link = node.Descendants().Where(n => n.Name == "a").FirstOrDefault()!.GetAttributes("href").FirstOrDefault()!.Value;
-                    var title = node.Descendants().Where(n => n.Name == "a").FirstOrDefault()!.InnerText;
-                    var image = node.Descendants().Where(n => n.Name == "img").FirstOrDefault()!.GetAttributes("src").FirstOrDefault()!.Value;
+                    var link = node.Descendants().Where(n => n.Name == "a").FirstOrDefault()?.GetAttributes("href").FirstOrDefault()?.Value;
+                    var title = node.Descendants().Where(n => n.Name == "a").FirstOrDefault()?.InnerText;
+                    var image = node.Descendants().Where(n => n.Name == "img").FirstOrDefault()?.GetAttributes("src").FirstOrDefault()?.Value;
                     var findMovie = await _collection.Find(Builders<Movie>.Filter.Eq(movie => movie.Link, link)).FirstOrDefaultAsync();
                     if (findMovie is null)
                     {
@@ -126,3 +126,4 @@ class SendMessages
     }
 }
 
+record Movie(ObjectId Id, string? Title, string? Link, string? Image, DateTime Time);

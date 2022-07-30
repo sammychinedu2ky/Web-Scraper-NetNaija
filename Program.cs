@@ -20,7 +20,7 @@ builder.Services.AddSingleton<IMongoClient>(s =>
 });
 var app = builder.Build();
 app.Run();
-record Movie(ObjectId Id, string Title, string Link, string Image, DateTime Time);
+
 enum Interval
 {
     CleanupInterval,
