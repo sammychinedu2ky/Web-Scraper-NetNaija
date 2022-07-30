@@ -33,7 +33,8 @@ class NotificationService : IHostedService
 
                 HtmlDocument htmlDoc = web.Load(html);
 
-                var elements = htmlDoc.DocumentNode.SelectNodes("//article");
+                var elements = htmlDoc.DocumentNode.SelectNodes("//article").Where(x=>x.HasClass("file-one"));
+;
 
                 var newMovies = new List<Movie>();
                 foreach (var node in elements)
